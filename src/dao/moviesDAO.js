@@ -1,12 +1,8 @@
-import {
-  ObjectId
-} from "bson"
+import { ObjectId } from "bson"
 
 let movies
 let mflix
-const DEFAULT_SORT = [
-  ["tomatoes.viewer.numReviews", -1]
-]
+const DEFAULT_SORT = [["tomatoes.viewer.numReviews", -1]]
 
 export default class MoviesDAO {
   static async injectDB(conn) {
@@ -31,13 +27,10 @@ export default class MoviesDAO {
    */
   static async getConfiguration() {
     const roleInfo = await mflix.command({
-      connectionStatus: 1
+      connectionStatus: 1,
     })
     const authInfo = roleInfo.authInfo.authenticatedUserRoles[0]
-    const {
-      poolSize,
-      wtimeout
-    } = movies.s.db.serverConfig.s.options
+    const { poolSize, wtimeout } = movies.s.db.serverConfig.s.options
     let response = {
       poolSize,
       wtimeout,
@@ -73,11 +66,11 @@ export default class MoviesDAO {
       cursor = await movies
         .find({
           countries: {
-            $in: countries
-          }
+            $in: countries,
+          },
         })
         .project({
-          title: 1
+          title: 1,
         })
       //cursor = await movies.find().limit(1)
     } catch (e) {
@@ -96,23 +89,21 @@ export default class MoviesDAO {
   static textSearchQuery(text) {
     const query = {
       $text: {
-        $search: text
-      }
+        $search: text,
+      },
     }
     const meta_score = {
-      $meta: "textScore"
+      $meta: "textScore",
     }
-    const sort = [
-      ["score", meta_score]
-    ]
+    const sort = [["score", meta_score]]
     const project = {
-      score: meta_score
+      score: meta_score,
     }
 
     return {
       query,
       project,
-      sort
+      sort,
     }
   }
 
@@ -126,8 +117,8 @@ export default class MoviesDAO {
 
     const query = {
       cast: {
-        $in: searchCast
-      }
+        $in: searchCast,
+      },
     }
     const project = {}
     const sort = DEFAULT_SORT
@@ -135,7 +126,7 @@ export default class MoviesDAO {
     return {
       query,
       project,
-      sort
+      sort,
     }
   }
 
@@ -158,8 +149,8 @@ export default class MoviesDAO {
     // Construct a query that will search for the chosen genre.
     const query = {
       genres: {
-        $in: searchGenre
-      }
+        $in: searchGenre,
+      },
     }
     const project = {}
     const sort = DEFAULT_SORT
@@ -167,7 +158,7 @@ export default class MoviesDAO {
     return {
       query,
       project,
-      sort
+      sort,
     }
   }
 
@@ -188,53 +179,63 @@ export default class MoviesDAO {
       throw new Error("Must specify cast members to filter by.")
     }
     const matchStage = {
-      $match: filters
+      $match: filters,
     }
     const sortStage = {
       $sort: {
-        "tomatoes.viewer.rating": -1
-      }
+        "tomatoes.viewer.rating": -1,
+      },
     }
-    const countingPipeline = [matchStage, sortStage, {
-      $count: "count"
-    }]
+    const countingPipeline = [
+      matchStage,
+      sortStage,
+      {
+        $count: "count",
+      },
+    ]
     const skipStage = {
-      $skip: moviesPerPage * page
+      $skip: moviesPerPage * page,
     }
     const limitStage = {
-      $limit: moviesPerPage
+      $limit: moviesPerPage,
     }
     const facetStage = {
       $facet: {
-        runtime: [{
-          $bucket: {
-            groupBy: "$runtime",
-            boundaries: [0, 60, 90, 120, 180],
-            default: "other",
-            output: {
-              count: {
-                $sum: 1
+        runtime: [
+          {
+            $bucket: {
+              groupBy: "$runtime",
+              boundaries: [0, 60, 90, 120, 180],
+              default: "other",
+              output: {
+                count: {
+                  $sum: 1,
+                },
               },
             },
           },
-        }, ],
-        rating: [{
-          $bucket: {
-            groupBy: "$metacritic",
-            boundaries: [0, 50, 70, 90, 100],
-            default: "other",
-            output: {
-              count: {
-                $sum: 1
+        ],
+        rating: [
+          {
+            $bucket: {
+              groupBy: "$metacritic",
+              boundaries: [0, 50, 70, 90, 100],
+              default: "other",
+              output: {
+                count: {
+                  $sum: 1,
+                },
               },
             },
           },
-        }, ],
-        movies: [{
-          $addFields: {
-            title: "$title",
+        ],
+        movies: [
+          {
+            $addFields: {
+              title: "$title",
+            },
           },
-        }, ],
+        ],
       },
     }
 
@@ -254,7 +255,7 @@ export default class MoviesDAO {
       sortStage,
       skipStage,
       limitStage,
-      facetStage
+      facetStage,
       // TODO Ticket: Faceted Search
       // Add the stages to queryPipeline in the correct order.
     ]
@@ -268,7 +269,7 @@ export default class MoviesDAO {
       }
     } catch (e) {
       return {
-        error: "Results too large, be more restrictive in filter"
+        error: "Results too large, be more restrictive in filter",
       }
     }
   }
@@ -299,9 +300,7 @@ export default class MoviesDAO {
       }
     }
 
-    let {
-      query = {}, project = {}, sort = DEFAULT_SORT
-    } = queryParams
+    let { query = {}, project = {}, sort = DEFAULT_SORT } = queryParams
     let cursor
     try {
       cursor = await movies
@@ -312,7 +311,7 @@ export default class MoviesDAO {
       console.error(`Unable to issue find command, ${e}`)
       return {
         moviesList: [],
-        totalNumMovies: 0
+        totalNumMovies: 0,
       }
     }
 
@@ -335,7 +334,7 @@ export default class MoviesDAO {
 
       return {
         moviesList,
-        totalNumMovies
+        totalNumMovies,
       }
     } catch (e) {
       console.error(
@@ -343,7 +342,7 @@ export default class MoviesDAO {
       )
       return {
         moviesList: [],
-        totalNumMovies: 0
+        totalNumMovies: 0,
       }
     }
   }
@@ -370,35 +369,34 @@ export default class MoviesDAO {
       const pipeline = [
         {
           $match: {
-            '_id': new ObjectId(id)
-          }
-        }, 
+            _id: new ObjectId(id),
+          },
+        },
         {
           $lookup: {
-            from: 'comments', 
+            from: "comments",
             let: {
-              'id': '$_id'
-            }, 
+              id: "$_id",
+            },
             pipeline: [
               {
                 $match: {
                   $expr: {
-                    $eq: [
-                      '$movie_id', '$$id'
-                    ]
-                  }
-                }
-              }, {
+                    $eq: ["$movie_id", "$$id"],
+                  },
+                },
+              },
+              {
                 $sort: {
-                  'date': -1
-                }
-              }
-            ], 
-            as: 'comments'
-          }
-        }
+                  date: -1,
+                },
+              },
+            ],
+            as: "comments",
+          },
+        },
       ]
-      
+
       return await movies.aggregate(pipeline).next()
     } catch (e) {
       /**
@@ -411,6 +409,12 @@ export default class MoviesDAO {
       // TODO Ticket: Error Handling
       // Catch the InvalidId error by string matching, and then handle it.
       console.error(`Something went wrong in getMovieByID: ${e}`)
+      if (
+        e.message ==
+        "Argument passed in must be a single String of 12 bytes or a string of 24 hex characters"
+      ) {
+        return null
+      }
       throw e
     }
   }
